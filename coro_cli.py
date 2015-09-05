@@ -104,26 +104,16 @@ class CoroCLI():
 
 
 ################################################################
-'''
+
 @coroutine
 def info_cmd(cli, cmd, rol):
-
-    @coroutine
-    def showAT(at):
-        yield from cli.write(' %s %d' % (at, (yield from cli.xb.AT_cmd(at))))
-
-    yield from cli.write('addr %s' % hexlify(cli.xb.address))
-    yield from showAT('DB')
-    yield from showAT('PL')
+    yield from cli.write('mem_alloc %s, mem_free %s' \
+                         % (gc.mem_alloc(), gc.mem_free()))
     loop = yield GetRunningLoop(None)
-    yield from cli.write(' qlen %d' % len(loop.q))
-    gc.collect()
-    yield
-    gc.collect()
-    yield from cli.write(' mem_free %d' % gc.mem_free())
+    yield from cli.write(', qlen %d' % len(loop.q))
     yield from cli.writeln('')
 
-
+'''
 @coroutine
 def at_cmd(cli, cmd, rol):
     print(repr(rol))
@@ -268,6 +258,15 @@ def ack_cmd(cli, cmd, rol):
 '''
 
 @coroutine
+def gc_cmd(cli, cmd, rol):
+    before = gc.mem_alloc(), gc.mem_free()
+    gc.collect()
+    after = gc.mem_alloc(), gc.mem_free()
+    yield from cli.writeln('mem_alloc %d, mem_free %d (up %d)' \
+                         % (after[0], after[1], after[1]-before[1]))
+
+
+@coroutine
 def eval_cmd(cli, cmd, rol):
     d = {'cli': cli,
          'loop': (yield GetRunningLoop(None)),
@@ -305,6 +304,8 @@ def inject_standard_commands(cli):
         'coro': coro_cmd,
         'eval': eval_cmd,
         'exec': exec_cmd,
+        'gc': gc_cmd,
+        'info': info_cmd,
         'hey': heyUsaid_cmd,
         'quit': quit_cmd })
 
