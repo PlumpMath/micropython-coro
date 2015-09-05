@@ -1,0 +1,62 @@
+Warning: these are out of date.
+
+* Notes:
+
+* Concepts:
+
+Coroutine: A generator that:
+* yields to allow others to run
+* may return a value
+* has a decorator to document (and possibly hook in checks or debug)
+
+EventLoop: Gets things done. There can be more than one.  An EventLoop
+has a queue of functions to call, with arguments.  Functions enter the
+EventLoop queue via call_soon(function, *args).  Queued functions are
+run in order by EventLoop.run_forever(), which returns if a queued fun
+raises LoopStop.
+
+
+Future: a class, instances of which:
+* are either done() or not (and are born not done())
+* get done when set_result(value) is called
+* have a list of callback functions which get called in order when done
+** callbacks get called with the future as only arg
+* callbacks added using add_done_callback()
+* If future already done when callback added, the callback gets added to the loop queue
+** consequently a Future instance is associated with a particular EventLoop instance
+
+Futures are iterable. An un-done future yields itself once. If
+next()'d a second time, it will return result (i.e. via StopIteration)
+if it's done. If it's not done it will raise an assert. By yielding
+itself, a future ***
+
+
+Task: a subclass of Future that wraps a coroutine (a generator). When
+created, adds itself to the loop's queue. A task is a callable, which
+when called takes next() of the coroutine. The coroutine either yields
+or returns a result via StopIteration. A returned result is used to
+set the result of the task. The yield of a future from the coroutine
+causes the task to add its _wakeup method to that future's
+callbacks. Anything else yielded by the coroutine merely causes the
+task to re-queue itself with the loop, so that it gets called again
+(unless TBS). This re-queuing causes a yielding coroutine to keep
+getting next()'d until it returns.
+
+A task's _wakeup() gets called when the coroutine's yielded future (if
+ it does so yield) is done. That future's result is sent back to the
+ coroutine to be the return value of its next yield. [This behavior
+ was copied from Cpython and IS PROBABLY WRONG BEHAVIOR in the context
+ of this implementation.]
+
+future its
+coroutine yielded. That 
+
+****** if coroutine yields a Future
+
+***** when the coroutine returns, the value comes in a StopIteration and is used to set result
+
+
+
+
+
+* 
