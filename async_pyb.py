@@ -286,10 +286,10 @@ def set_event_loop(loop):
             raise ValueError('set_event_loop() requires an EventLoop')
     _event_loop = loop
 
-def sleep(secs, loop=None):
+def sleep(ms, loop=None):
     # FIXME: deal with loop being passed
     # But sleep only happens to a coro, by the loop that runs it
-    yield Sleep(secs)
+    yield Sleep(ms)
 
 def coroutine(f):
     return f
