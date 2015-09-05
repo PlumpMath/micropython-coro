@@ -161,14 +161,21 @@ def dest_cmd(cli, cmd, rol):
 @coroutine
 def coro_cmd(cli, cmd, rol):
     # launch a command in the background, as a coro
-    c_cmd, _, c_rol = rol.partition(b' ')
+    s1, _, srem = rol.partition(b' ')
+    try:
+        n = int(s1)
+        c_cmd, _, c_rol = srem.partition(b' ')
+    except:
+        n = 1
+        c_cmd, _, c_rol = rol.partition(b' ')
     c_cmd = str(c_cmd, 'ASCII')
     c_rol = c_rol.lstrip()
 
     fun = cli.command_dispatch.get(c_cmd.lower())
     #print(cli, c_cmd, c_rol)
     if fun:
-        yield fun(cli, c_cmd, c_rol)
+        for i in range(n):
+            yield fun(cli, c_cmd, c_rol)
     else:
         yield from cli.writeln("coro can't find %s" % c_cmd)
 
