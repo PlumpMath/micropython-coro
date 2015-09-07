@@ -43,6 +43,10 @@ class CoroCLI():
                     buf = self.cmd_hist[hi][:]
                     hi = min(hi+1, len(self.cmd_hist)-1)
                     console.write(b'\r' + self.prompt + buf + b'\x1b[K')
+                elif c == b'\x7f' or c == b'\x08':
+                    if buf:
+                        console.write(b'\x08 \x08')
+                    buf = buf[:-1]
                 elif c == b'\r' or c == b'\n':
                     if buf and buf != self.cmd_hist[0]:
                         self.cmd_hist.insert(0, buf)
