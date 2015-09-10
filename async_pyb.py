@@ -5,7 +5,8 @@ try:
     import utime as time
 except ImportError:
     import time
-import uheapq as heapq
+#import uheapq as heapq
+import heapq                    # DEBUG
 import logging
 import pyb
 import gc
@@ -26,8 +27,11 @@ class TimeoutError(Exception):
 class EventLoop:
     _t0 = pyb.millis()
 
-    def __init__(self):
-        self.q = []
+    def __init__(self, q=None):
+        if q is None:
+            self.q = []
+        else:
+            self.q = q
         self.cnt = 0
         self.idle_us = 0 # idle time in microseconds
         self.max_gc_us = 0
@@ -277,8 +281,11 @@ def get_event_loop():
         _event_loop = _event_loop_class()
     return _event_loop
 
-def new_event_loop():
-    return _event_loop_class()
+def new_event_loop(pre=None):
+    if pre is None:
+        return _event_loop_class()
+    from prealloc_list import PreAllocatedList as _PAL
+    return _event_loop_class(_PAL(pre))
 
 def set_event_loop(loop):
     if loop is not None: # Allow None for testing correct passing of loop as kwarg

@@ -36,7 +36,7 @@ class CoroTestCase(unittest.TestCase):
     def setUp(self):
         logging.basicConfig(level=logging.INFO)
         global _test_EventLoop
-        self.loop = new_event_loop()
+        self.loop = new_event_loop(64) # pre-allocate slots for 64 queued calls/yields
         assert self.loop is not _test_EventLoop
         _test_EventLoop = self.loop
         set_event_loop(None)
@@ -582,7 +582,7 @@ class CoroTestCase(unittest.TestCase):
             v = yield from wait_for(fut, 50)
             self.assertEqual(v, 'good')
             et = pyb.elapsed_millis(t0)
-            self.assertTrue(20 <= et < 25, 'et was %rms (expected 20-25ms)' % et)
+            self.assertTrue(20 <= et < 30, 'et was %rms (expected 20-30ms)' % et)
             
             # One that hits the timeout
             t0 = pyb.millis()
@@ -610,9 +610,9 @@ class CoroTestCase(unittest.TestCase):
             t0 = pyb.millis()
             fut = Future()
             me = yield GetRunningCoro(None)
-            self.assertEqual(self.loop.q, []) # nobody in the queue
+            self.assertEqual(len(self.loop.q), 0) # nobody in the queue
             yield from sleep(1)
-            self.assertEqual(self.loop.q, []) # nobody in the queue
+            self.assertEqual(len(self.loop.q), 0) # nobody in the queue
             v_coro = yield coro(me, 10) # starts
             self.assertEqual(len(self.loop.q), 1) # coro is queued
             v_sleep = yield Sleep(20)
@@ -647,7 +647,7 @@ class CoroTestCase(unittest.TestCase):
         loop = self.loop
         loop.run_until_complete(coro(1, 10, 1))
         idle_frac = loop.idle_us / (loop.d_ms * 1000)
-        self.assertTrue(idle_frac > 0.3)
+        self.assertTrue(idle_frac > 0.25, "idle fraction %r (expected > 0.25)" % idle_frac)
         print("%dms, %dus idle, (%f)" % (loop.d_ms, loop.idle_us, idle_frac))
         loop.run_until_complete(coro(1, 10, 10))
         idle_frac = loop.idle_us / (loop.d_ms * 1000)
