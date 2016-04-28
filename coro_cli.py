@@ -7,7 +7,7 @@ from async_pyb import new_event_loop, set_event_loop, \
 import pyb
 import gc
 
-from pyb import USB_VCP, SPI, Pin, millis, elapsed_millis
+from pyb import USB_VCP, SPI, millis, elapsed_millis
 
 
 class GotEOT(Exception):
